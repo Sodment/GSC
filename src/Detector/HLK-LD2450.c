@@ -225,7 +225,7 @@ static void thread_sensor_poll(void *par)
 			// uart_dma_wyslij(uart, test, 4);
 			// uart_dma_czekaj_na_zakonczenie_nadawania(uart);
 		}
-		ESP_LOGV(TAG, "Czujnik %d", uart->cfg.numer_uarta);
+		//ESP_LOGV(TAG, "Czujnik %d", uart->cfg.numer_uarta);
 		//ESP_LOGV(TAG, "configMAX_PRIORITIES %d", configMAX_PRIORITIES);
 	}
 }
@@ -250,3 +250,31 @@ ld2450_t *detector_init(uint8_t uart_nr, int8_t pin_tx, int8_t pin_rx)
 	return ld;
 }
 //-----------------------------------------------------------------------
+
+void get_person(ld2450_t *ld2450, uint8_t person_number, int32_t *x, int32_t *y) 
+{
+	ld2450_int_t *ld = ld2450;
+	switch(person_number)
+	{
+		case 0:
+		{
+			*x = ld->target1X;
+			*y = ld->target1Y;
+			break;
+		}
+		case 1:
+		{
+			*x = ld->target2X;
+			*y = ld->target2Y;
+			break;
+		}
+		
+		case 2:
+		{
+			*x = ld->target3X;
+			*y = ld->target3Y;
+			break;
+		}
+	}
+
+}

@@ -15,6 +15,7 @@
 		"ledc.h": "c",
 		"soc_caps.h": "c",
 		"stdint.h": "c",
-		"random": "c"
+		"random": "c",
+		"esp_clk.h": "c"
 	}
 }
