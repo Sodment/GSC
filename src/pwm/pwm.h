@@ -37,7 +37,8 @@ void        ledcAttachPin(uint8_t pin, uint8_t channel);
 void        ledcDetachPin(uint8_t pin);
 uint32_t    ledcChangeFrequency(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
 
-void pwm_init(uint8_t index, int8_t pin, uint32_t frequency_hz, uint8_t percent);
+void pwm_set_brightness	(uint8_t index, uint8_t percent);
+void pwm_init			(uint8_t index, int8_t pin, uint32_t frequency_hz, uint8_t percent);
 
 
 #ifdef __cplusplus

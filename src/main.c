@@ -2,18 +2,18 @@
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "string.h"
+#include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <stdio.h>
-#include "uart_dma/uart_dma.h"
-#include "common.h"
-#include "Detector/HLK-LD2450.h"
 #include <esp_task_wdt.h>
-#include "PWM/esp32-hal-ledc.h"
 #include "esp_pm.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_private/esp_clk.h"
+#include "common.h"
+#include "Detector/HLK-LD2450.h"
+#include "pwm/pwm.h"
+#include "Patterns/Test_PWM/test_PWM.h"
 
 // PIN MAPPING
 #define LED_0 GPIO_NUM_15
@@ -65,6 +65,9 @@ void show_frequency() {
     printf("Current CPU frequency: %lu MHz\n", cpu_freq / (uint32_t)1000000);
 }
 
+ld2450_t	*ld2450_bottom;
+ld2450_t	*ld2450_top;
+
 /* Works only for the first time. Add all setups at the beginning.*/
 void setup()
 {
@@ -76,6 +79,11 @@ void setup()
         gpio_reset_pin(LEDS[i]);
         gpio_set_direction(LEDS[i], GPIO_MODE_OUTPUT);
     }
+
+	ld2450_bottom 	= detector_init(1, 21, 36);
+	ld2450_top 		= detector_init(2, 16, 17);	//nie uzywany
+
+
 	//ESP_LOGV(TAG, "Stop!");
 	
 
@@ -84,8 +92,7 @@ void setup()
     //gpio_set_pull_mode(RX_PIN, GPIO_PULLUP_ONLY);
     //gpio_reset_pin(TX_PIN);
     //gpio_set_direction(RX_PIN, GPIO_MODE_OUTPUT);
-	//uart_init();
-
+	
 	//int i;
 	// for (i = 0; i < LED_LENGTH/2; i++)
     //     {
@@ -96,10 +103,10 @@ void setup()
 	// 		//uart_dma_wyslij()
     //     }
 		
-	/*for (int i=LED_LENGTH;i<LED_LENGTH;i++)
+	for (int i=0;i<LED_LENGTH;i++)
 	{
 		pwm_init(i, LEDS[i], 400, 50);
-	}*/
+	}
 
 }
 
@@ -157,13 +164,13 @@ void app_main()
     // );
 
 	// TODO: Detector works, reformat files
-	//detector_init();
 
 	while(true)
 	{
 	// Odśwież zegar watchdog
         //esp_task_wdt_reset();  // Resetuje zegar WDT dla tego zadania
-		sleep_ms(1000);
+		test_PWM();
+		sleep_ms(1);
 	}
 
     // gpio_dump_io_configuration(stdout, (1ULL << 34) | (1ULL << 18) | (1ULL << 26));

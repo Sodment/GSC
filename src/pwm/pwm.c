@@ -273,9 +273,22 @@ void analogWriteResolution(uint8_t bits) {
     analog_resolution = bits;
 }
 
+void pwm_set_brightness(uint8_t index, uint8_t percent)
+{
+	ledcWrite(index, (percent*255)/100);
+}
+
+/*
+	Initialize range of light sent to pins. Better to set indexes respectively here, because usage is with PWM index, not with pin index.
+	index - number of PWM (min 0, max 15), bo w procesorze jest maksymalnie 16 PWMow
+	pin - number of pin where it will be used
+	frequency - T signal width
+	percent - %
+*/
 void pwm_init(uint8_t index, int8_t pin, uint32_t frequency_hz, uint8_t percent)
 {
 	ledcSetup(index, frequency_hz, LEDC_TIMER_8_BIT);
 	ledcAttachPin(pin, index);
-	ledcWrite(index, (percent*255)/100);
+	pwm_set_brightness(index, percent);
 }
+

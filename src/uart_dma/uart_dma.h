@@ -45,35 +45,34 @@ typedef struct
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 typedef struct
 {
-	uart_dev_t			*uart_dev;
+	uart_dev_t				*uart_dev;
 	uart_dma_buf_cfg_t		cfg;
 	uart_dma_buf_desc_t		tx;
-	//uart_dma_buf_desc_t		rx;
-	uint8_t				*bufor_rx;
-	uint32_t			odebrano_bajtow;
-	int64_t			    czas;
-	uint32_t			timeout_ms;
-	uint32_t			rozpoczeto_odbieranie_ramki	: 1;
-	uint32_t			uruchomiono_odbior 		: 1;
-	uint32_t			odebrano_ramke	 		: 1;
+	uint8_t					*bufor_rx;
+	uint32_t				odebrano_bajtow;
+	int64_t			    	czas;
+	uint32_t				timeout_ms;
+	uint32_t				rozpoczeto_odbieranie_ramki		: 1;
+	uint32_t				uruchomiono_odbior 				: 1;
+	uint32_t				odebrano_ramke	 				: 1;
 } uart_dma_t;
 //--------------------------------------------------------------------------------------------------------------------------------------------------
-	uart_dma_t	*uart_dma_init						(uart_dma_buf_cfg_t	*cfg);
-	void		uart_dma_uruchom_odbior					(uart_dma_t		*uart_dma);
-	void		uart_dma_ustaw_predkosc					(uart_dma_t		*uart_dma, uint32_t baudrate);
-	void		uart_dma_wyslij						(uart_dma_t		*uart_dma, uint8_t *bufor, uint16_t dlugosc);
-	int		uart_dma_czekaj_na_zakonczenie_nadawania		(uart_dma_t		*uart_dma);
-	void		uart_dma_deinit						(uart_dma_t		**uart_dma);
-	bool		uart_dma_obsluga					(uart_dma_t		*uart_dma);
-	bool		uart_dma_czy_odebrano_ramke				(uart_dma_t		*uart_dma);
+	uart_dma_t	*uart_dma_init								(uart_dma_buf_cfg_t	*cfg);
+	void		uart_dma_uruchom_odbior						(uart_dma_t		*uart_dma);
+	void		uart_dma_ustaw_predkosc						(uart_dma_t		*uart_dma, uint32_t baudrate);
+	void		uart_dma_wyslij								(uart_dma_t		*uart_dma, uint8_t *bufor, uint16_t dlugosc);
+	int			uart_dma_czekaj_na_zakonczenie_nadawania	(uart_dma_t		*uart_dma);
+	void		uart_dma_deinit								(uart_dma_t		**uart_dma);
+	bool		uart_dma_obsluga							(uart_dma_t		*uart_dma);
+	bool		uart_dma_czy_odebrano_ramke					(uart_dma_t		*uart_dma);
 #else
-	#define uart_dma_init(x...)						(NULL)
+	#define uart_dma_init(x...)								(NULL)
 	#define uart_dma_uruchom_odbior(x...)					{}
 	#define uart_dma_ustaw_predkosc(x...)					{}
-	#define uart_dma_wyslij(x...)						{}
-	#define uart_dma_czekaj_na_zakonczenie_nadawania(x...)			(0)
-	#define uart_dma_deinit(x...)						{}
-	#define uart_dma_obsluga(x...)						{}
+	#define uart_dma_wyslij(x...)							{}
+	#define uart_dma_czekaj_na_zakonczenie_nadawania(x...)	(0)
+	#define uart_dma_deinit(x...)							{}
+	#define uart_dma_obsluga(x...)							{}
 	#define uart_dma_czy_odebrano_ramke(x...)				(0)
 #endif
 //--------------------------------------------------------------------------------------------------------------------------------------------------

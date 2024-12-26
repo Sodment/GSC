@@ -1,4 +1,4 @@
-//#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -7,62 +7,54 @@
 #include "freertos/task.h"
 #include "HLK-LD2450.h"
 #include "../common.h"
-#include "uart_dma/uart_dma.h"
+#include "../uart_dma/uart_dma.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 #include "driver/gpio.h"
+//-----------------------------------------------------------------------
+#define CHECK_BIT(var, pos) 	(((var) >> (pos)) & 1)
+#define STATE_SIZE 				8
+#define TARGETS 				3
 
-#define CHECK_BIT(var, pos) (((var) >> (pos)) & 1)
-#define STATE_SIZE 8
-#define TARGETS 3
-
-int64_t lastPeriodicMillis;// = millis();
-extern const int LEDS[];
-//int64_t millis();
-
-// SENSOR //-----------------------------------------------------------------------
-typedef struct {
-    int32_t state;  // State to store the sensor's value
-} Sensor;
-
-typedef struct {
-    Sensor lastCommandSuccess;
-
-    Sensor target1Resolution;
-    Sensor target1Speed;
-    Sensor target1X;
-    Sensor target1Y;
-
-    Sensor target2Resolution;
-    Sensor target2Speed;
-    Sensor target2X;
-    Sensor target2Y;
-
-    Sensor target3Resolution;
-    Sensor target3Speed;
-    Sensor target3X;
-    Sensor target3Y;
-
-    Sensor targets;
-
-    //uint32_t lastPeriodicMillis;
-
-} LD2450_t;
-LD2450_t LD2450;
 static const char *TAG = "LD2450";
+//-----------------------------------------------------------------------
+typedef struct
+{
+	uart_dma_t 	*uart;
+    int32_t 	lastCommandSuccess;
 
-uint16_t twoByteToUint(char firstByte, char secondByte) {
+    int32_t 	target1Resolution;
+    int32_t 	target1Speed;
+    int32_t 	target1X;
+    int32_t 	target1Y;
+
+    int32_t 	target2Resolution;
+    int32_t 	target2Speed;
+    int32_t 	target2X;
+    int32_t 	target2Y;
+
+    int32_t 	target3Resolution;
+    int32_t 	target3Speed;
+    int32_t 	target3X;
+    int32_t 	target3Y;
+
+    int32_t 	targets;
+
+	int64_t 	lastPeriodicMillis;
+} ld2450_int_t;
+//-----------------------------------------------------------------------
+static uint16_t twoByteToUint(char firstByte, char secondByte)
+{
 	return (uint16_t)(secondByte << 8) + firstByte;
 }
-
 //-----------------------------------------------------------------------
-
-void reportTargetInfo(int target, char *raw) 
+// Source: https://github.com/Chreece/LD2450-ESPHome/blob/master/custom_components/ld2450_uart.h
+static void reportTargetInfo(ld2450_int_t *ld, int target, char *raw) 
 {
     int16_t newX, newY, newSpeed, sum;
     uint16_t newResolution;
 
-    // ESP_LOGV(TAG, "Will reporting taget %d", target);
+	//ESP_LOGV(TAG, "Will reporting taget %d", target);
 
     switch (target) {
 	case 0:
@@ -71,25 +63,25 @@ void reportTargetInfo(int target, char *raw)
           	newX = 0 - newX / 10;
         else
 			newX = newX / 10;
-        if (LD2450.target1X.state != newX)
-			LD2450.target1X.state = newX;
+        if (ld->target1X != newX)
+			ld->target1X = newX;
           //target1X->publish_state(newX);
         newY = twoByteToUint(raw[2], raw[3] & 0x7F);
         if (raw[3] >> 7 != 0x1)
           newY = 0 - newY / 10;
         else
           newY = newY / 10;
-        if (LD2450.target1Y.state != newY)
-          LD2450.target1Y.state = newY;
+        if (ld->target1Y != newY)
+          ld->target1Y = newY;
 		  //target1Y->publish_state(newY);
         newSpeed = twoByteToUint(raw[4], raw[5] & 0x7F);
         if (raw[5] >> 7 != 0x1)
           newSpeed = 0 - newSpeed;
-        if (LD2450.target1Speed.state != newSpeed)
-          LD2450.target1Speed.state = newSpeed;
+        if (ld->target1Speed != newSpeed)
+          ld->target1Speed = newSpeed;
         newResolution = twoByteToUint(raw[6], raw[7]);
-        if (LD2450.target1Resolution.state != newResolution)
-          LD2450.target1Resolution.state = newResolution;
+        if (ld->target1Resolution != newResolution)
+          ld->target1Resolution = newResolution;
         break;
       case 1:
         newX = twoByteToUint(raw[0], raw[1] & 0x7F);
@@ -97,23 +89,23 @@ void reportTargetInfo(int target, char *raw)
           newX = 0 - newX / 10;
         else
           newX = newX / 10;
-        if (LD2450.target2X.state != newX)
-          LD2450.target2X.state = newX;
+        if (ld->target2X != newX)
+          ld->target2X = newX;
         newY = twoByteToUint(raw[2], raw[3] & 0x7F);
         if (raw[3] >> 7 != 0x1)
           newY = 0 - newY / 10;
         else
           newY = newY / 10;
-        if (LD2450.target2Y.state != newY)
-          LD2450.target2Y.state = newY;
+        if (ld->target2Y != newY)
+          ld->target2Y = newY;
         newSpeed = twoByteToUint(raw[4], raw[5] & 0x7F);
         if (raw[5] >> 7 != 0x1)
           newSpeed = 0 - newSpeed;
-        if (LD2450.target2Speed.state != newSpeed)
-          LD2450.target2Speed.state = newSpeed;
+        if (ld->target2Speed != newSpeed)
+          ld->target2Speed = newSpeed;
         newResolution = twoByteToUint(raw[6], raw[7]);
-        if (LD2450.target2Resolution.state != newResolution)
-          LD2450.target2Resolution.state = newResolution;
+        if (ld->target2Resolution != newResolution)
+          ld->target2Resolution = newResolution;
         break;
       case 2:
         newX = twoByteToUint(raw[0], raw[1] & 0x7F);
@@ -121,41 +113,42 @@ void reportTargetInfo(int target, char *raw)
           newX = 0 - newX / 10;
         else
           newX = newX / 10;
-        if (LD2450.target3X.state != newX)
-          LD2450.target3X.state = newX;
+        if (ld->target3X != newX)
+          ld->target3X = newX;
         newY = twoByteToUint(raw[2], raw[3] & 0x7F);
         if (raw[3] >> 7 != 0x1)
           newY = 0 - newY / 10;
         else
           newY = newY / 10;
-        if (LD2450.target3Y.state != newY)
-          LD2450.target3Y.state = newY;
+        if (ld->target3Y != newY)
+          ld->target3Y = newY;
         newSpeed = twoByteToUint(raw[4], raw[5] & 0x7F);
         if (raw[5] >> 7 != 0x1)
           newSpeed = 0 - newSpeed;
-        if (LD2450.target3Speed.state != newSpeed)
-          LD2450.target3Speed.state = newSpeed;
+        if (ld->target3Speed != newSpeed)
+          ld->target3Speed = newSpeed;
         newResolution = twoByteToUint(raw[6], raw[7]);
-        if (LD2450.target3Resolution.state != newResolution)
-          LD2450.target3Resolution.state = newResolution;
+        if (ld->target3Resolution != newResolution)
+          ld->target3Resolution = newResolution;
         break;
     }
     sum = 0;
-    if (LD2450.target1Resolution.state > 0){
+    if (ld->target1Resolution > 0){
       sum+=1;
     }
-    if (LD2450.target2Resolution.state > 0){
+    if (ld->target2Resolution > 0){
       sum+=1;
     }
-    if (LD2450.target3Resolution.state > 0){
+    if (ld->target3Resolution > 0){
       sum+=1;
     }
-    if (LD2450.targets.state != sum){
-      LD2450.targets.state = sum;
+    if (ld->targets != sum){
+      ld->targets = sum;
     }
   }
-
-void handlePeriodicData(char *buffer, int len) 
+//-----------------------------------------------------------------------
+// Source: https://github.com/Chreece/LD2450-ESPHome/blob/master/custom_components/ld2450_uart.h
+static void handlePeriodicData(ld2450_int_t *ld, char *buffer, int len) 
 {
 	if (len < 29)
 		return;  // 4 frame start bytes + 2 length bytes + 1 data end byte + 1 crc byte + 4 frame end bytes
@@ -169,102 +162,53 @@ void handlePeriodicData(char *buffer, int len)
 		Reduce data update rate to prevent home assistant database size glow fast
 	*/
 	int64_t currentMillis = millis();
-	if (currentMillis - lastPeriodicMillis < 1000)
+	if (currentMillis - ld->lastPeriodicMillis < 1000)
 		return;
-	lastPeriodicMillis = currentMillis;
-	for (int i = 0; i < TARGETS; i++) {
+	ld->lastPeriodicMillis = currentMillis;
+	for (int i = 0; i < TARGETS; i++)
+	{
 		memcpy(stateBytes, &buffer[4 + i * STATE_SIZE], STATE_SIZE);
-		reportTargetInfo(i, stateBytes);
+		reportTargetInfo(ld, i, stateBytes);
 	}
 }
-uart_dma_t *uart_init()
+//-----------------------------------------------------------------------
+/*
+	Inicjalizacja UARTa na potrzeby komunikacji z jednym czujnikiem LD2450
+	uart_nr - 1 lub 2
+*/
+static uart_dma_t *uart_init(uint8_t uart_nr, int8_t pin_tx, int8_t pin_rx)
 {
 	uart_dma_buf_cfg_t	cfg;
 
-	//TODO: ponizsze parametry sa ustawione na sztywno, trzeba dorobic edycje ich za pomoca strony www oraz wykorzystac modul polaczenie uart (podobnie jak modul ethernet_uart)
+	cfg.numer_uarta						=	uart_nr;
+
+	cfg.gpio_pin_tx						=	pin_tx;
+	cfg.gpio_pin_rx						=	pin_rx;
+	cfg.gpio_pin_rts					=	-1;
+	cfg.rozmiar_kazdego_bufora_tx_i_rx	=	1024;
+	cfg.baudrate						=	256000;
+	if (uart_nr==1)
 	{
-		cfg.numer_uarta				=	1;
-
-		cfg.gpio_pin_tx				=	21;
-		cfg.gpio_pin_rx				=	36;
-		cfg.gpio_pin_rts			=	-1;
-		cfg.rozmiar_kazdego_bufora_tx_i_rx	=	1024;
-		cfg.baudrate				=	256000;
-		cfg.uhci_dev				=	&UHCI0;
-		cfg.inwersja_rx_tx			=	false;
-		cfg.inwersja_dir			=	false;
-
-		return uart_dma_init(&cfg);
+		cfg.uhci_dev					=	&UHCI0;
 	}
-}
-
-#define SIZE 16 // From -30 to 30
-
-void show_LED(int input_x1, int input_y1, int input_x2, int input_y2) {
-    uint32_t person_y1 = input_y1 / 30;
-	uint32_t person_y2 = input_y2 / 30;
-	// 1
-	if(person_y1>15) person_y1 = 15;
-
-	V_ON(LEDS[person_y1]);
-
-	// 2
-	if(person_y2>15) person_y2 = 15;
-
-	V_ON(LEDS[person_y2]);
-
-	for(int k=0;k<16;k++) // TODO: zmienic na ARRAY_SIZE zeby dzialalo
+	else
 	{
-		if(person_y1 != k && person_y2 != k) V_OFF(LEDS[k]);
+		cfg.uhci_dev					=	&UHCI1;
 	}
+	cfg.inwersja_rx_tx					=	false;
+	cfg.inwersja_dir					=	false;
+
+	return uart_dma_init(&cfg);
 }
-
-void print_matrix(int input_x, int input_y) {
-    int person_x = input_x / 20;
-    int person_y = input_y / 20;
-
-    int dimension = 2 * SIZE + 1; // 61
-    char buffer[dimension + 1] ; // Buffer for the entire matrix
-
-
-	//ESP_LOGV(TAG, "MATRIX");
-
-    for (int i = SIZE-1; i >= 0; i--) {  // Bottom is the nearest 
-		memset(buffer, 0, sizeof(buffer));
-        for (int j = 0; j < dimension; j++) {
-            if (i == person_y && j == person_x+SIZE) {
-                buffer[j] = 'x';
-				
-            } else {
-                buffer[j] = '-';
-            }
-        }
-		//ESP_LOGV(TAG, "%s", buffer);
-    }
-	
-}
-
-void display_LED()
+//-----------------------------------------------------------------------
+static void thread_sensor_poll(void *par)
 {
-	while(true) 
-	{
-		sleep_ms(10);
-		//print_matrix((int)LD2450.target1X.state, (int)LD2450.target1Y.state);
-		//show_LED((int)LD2450.target1X.state, (int)LD2450.target1Y.state, (int)LD2450.target2X.state, (int)LD2450.target2Y.state);
-		//ESP_LOGV(TAG, "1X=%d 1Y=%d", (int)LD2450.target1X.state, (int)LD2450.target1Y.state);
+	ld2450_int_t	*ld = par;
+	uart_dma_t		*uart = ld->uart;
 
-	}
-}
-
-void thread_detector() 
-{
- 	uart_dma_t	*uart;
-	lastPeriodicMillis = millis();
-	uart = uart_init();
+	ld->lastPeriodicMillis = millis();
 	uart_dma_uruchom_odbior(uart);
 
-	
-	// ESP_LOGV(TAG, "Start watku detector!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 	//esp_task_wdt_add(NULL);
 	while(true) 
 	{
@@ -275,44 +219,34 @@ void thread_detector()
 		uart_dma_obsluga(uart);
 		if(uart_dma_czy_odebrano_ramke(uart))
 		{
-			uint32_t dlugosc;
-			dlugosc = uart->odebrano_bajtow;
-			 handlePeriodicData((char*)uart->bufor_rx, dlugosc);
-			//V_ON(LEDS[3]);
-			// if (dlugosc==4)
-			// {
-				
-			// 	if (memcmp(test, uart->bufor_rx, 4)==0)
-			// 	{
-			// 		V_ON(LEDS[4]);
-			// 	}
-			// }
+			uint32_t dlugosc = uart->odebrano_bajtow;
+		 	handlePeriodicData(ld, (char*)uart->bufor_rx, dlugosc);
 			uart_dma_uruchom_odbior(uart);
-			// ESP_LOGV(TAG, "1X=%d 1Y=%d!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", (int)LD2450.target1X.state, (int)LD2450.target1Y.state);
 			// uart_dma_wyslij(uart, test, 4);
 			// uart_dma_czekaj_na_zakonczenie_nadawania(uart);
 		}
-
+		ESP_LOGV(TAG, "Czujnik %d", uart->cfg.numer_uarta);
+		//ESP_LOGV(TAG, "configMAX_PRIORITIES %d", configMAX_PRIORITIES);
 	}
 }
-
-void detector_init()
+//-----------------------------------------------------------------------
+ld2450_t *detector_init(uint8_t uart_nr, int8_t pin_tx, int8_t pin_rx)
 {
-	xTaskCreate(
-        display_LED,		// Funkcja wątku
-        "Debug console",          	// Nazwa zadania
-        2048,              	// Rozmiar stosu (w słowach)
-        NULL,              	// Parametry przekazywane do wątku
-        5,                 	// Priorytet zadania
-        NULL               	// Uchwyt do zadania (opcjonalny)
-    );
+	ld2450_int_t	*ld = calloc(1, sizeof(ld2450_int_t));
+	if (!ld) return ld;
+
+	esp_log_level_set(TAG, ESP_LOG_VERBOSE);
+
+	ld->uart = uart_init(uart_nr, pin_tx, pin_rx);
 
 		xTaskCreate(
-        thread_detector,		// Funkcja wątku
+        thread_sensor_poll,		// Funkcja wątku
         "Detector",          	// Nazwa zadania
         2048,              	// Rozmiar stosu (w słowach)
-        NULL,              	// Parametry przekazywane do wątku
-        5,                 	// Priorytet zadania
+        ld,              	// Parametry przekazywane do wątku
+        1,                 	// Priorytet zadania
         NULL               	// Uchwyt do zadania (opcjonalny)
     );
+	return ld;
 }
+//-----------------------------------------------------------------------
