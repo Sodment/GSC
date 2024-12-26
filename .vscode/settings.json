@@ -1,0 +1,19 @@
+{
+	"files.associations": {
+		"*.embeddedhtml": "html",
+		"common.h": "c",
+		"uart_dma.h": "c",
+		"esp_timer.h": "c",
+		"freertos.h": "c",
+		"stdbool.h": "c",
+		"string.h": "c",
+		"array": "c",
+		"string_view": "c",
+		"initializer_list": "c",
+		"esp_task_wdt.h": "c",
+		"gpio_sig_map.h": "c",
+		"ledc.h": "c",
+		"soc_caps.h": "c",
+		"stdint.h": "c"
+	}
+}
