@@ -95,11 +95,11 @@ void setup()
 	
 	for (int i=0;i<LED_LENGTH;i++)
 	{
-		pwm_init(i, LEDS[i], 400, 100);
+		pwm_init(i, LEDS[i], 400, 0);
 	}
 
 }
-
+/*
 void test_mrugania_ledow(void *pvParameters)
 {
 	while (1)
@@ -115,7 +115,7 @@ void test_mrugania_ledow(void *pvParameters)
         }
 	}
 }
-
+*/
 // esp_task_wdt_config_t  esp_task_wdt_config;
 void app_main()
 {
@@ -131,14 +131,14 @@ void app_main()
 
 	// Tworzenie wątku
 	// 
-    xTaskCreate(
-        test_mrugania_ledow,// Funkcja wątku
-        "LED",          	// Nazwa zadania
-        2048,              	// Rozmiar stosu (w słowach)
-        NULL,              	// Parametry przekazywane do wątku
-        5,                 	// Priorytet zadania
-        NULL               	// Uchwyt do zadania (opcjonalny)
-    );
+    // xTaskCreate(
+    //     test_mrugania_ledow,// Funkcja wątku
+    //     "LED",          	// Nazwa zadania
+    //     2048,              	// Rozmiar stosu (w słowach)
+    //     NULL,              	// Parametry przekazywane do wątku
+    //     5,                 	// Priorytet zadania
+    //     NULL               	// Uchwyt do zadania (opcjonalny)
+    // );
 
     // xTaskCreate(
     //     thread_uart,		// Funkcja wątku
@@ -150,7 +150,7 @@ void app_main()
     // );
 
 	// TODO: Detector works, reformat files
-	//test_person_LED(); // TODO: PRZETESTUJ TO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	person_LED(); // TODO: PRZETESTUJ TO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	while(true)
 	{
@@ -159,7 +159,7 @@ void app_main()
 		//test_PWM();
 		
 
-		sleep_ms(1000);
+		sleep_ms(10);
 	}
 
     // gpio_dump_io_configuration(stdout, (1ULL << 34) | (1ULL << 18) | (1ULL << 26));

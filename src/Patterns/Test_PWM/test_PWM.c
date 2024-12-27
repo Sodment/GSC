@@ -7,7 +7,7 @@
 #define SIZE 16
 extern const int LEDS[];
 //-----------------------------------------------------------------------
-
+/*
 void test_PWM()
 {
 	int step = 1;
@@ -30,3 +30,4 @@ void test_PWM()
 		sleep_ms(WROOM);	
 	}
 }
+*/

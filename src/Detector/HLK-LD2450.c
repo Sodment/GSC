@@ -162,7 +162,7 @@ static void handlePeriodicData(ld2450_int_t *ld, char *buffer, int len)
 		Reduce data update rate to prevent home assistant database size glow fast
 	*/
 	int64_t currentMillis = millis();
-	if (currentMillis - ld->lastPeriodicMillis < 1000)
+	if (currentMillis - ld->lastPeriodicMillis < 10)
 		return;
 	ld->lastPeriodicMillis = currentMillis;
 	for (int i = 0; i < TARGETS; i++)

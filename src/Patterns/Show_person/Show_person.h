@@ -1,1 +1,1 @@
-void test_person_LED();
+void person_LED();
