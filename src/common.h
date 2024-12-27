@@ -13,5 +13,5 @@ void sleep_ms(uint32_t ms);
 // PWM
 void set_brightness(uint8_t index, uint8_t percent);
 
-#define STAIRS_COUNT			16
+#define STAIRS_COUNT			13
 
