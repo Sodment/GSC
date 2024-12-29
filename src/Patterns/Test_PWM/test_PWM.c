@@ -7,13 +7,15 @@
 #define SIZE 16
 extern const int LEDS[];
 //-----------------------------------------------------------------------
-/*
+
 void test_PWM()
 {
 	int step = 1;
-	int WROOM = 10;
+	int WROOM = 100;
+	int minBrightness = 0;
+	int maxBrightness = 100;
 
-	for(int brightness=0;brightness<=100;brightness+=step)
+	for(int brightness=minBrightness; brightness<=maxBrightness; brightness+=step)
 	{
 		for(int i=0;i<SIZE;i++)
 		{
@@ -21,7 +23,7 @@ void test_PWM()
 		}
 		sleep_ms(WROOM);	
 	}
-	for(int brightness=100;brightness>=0;brightness-=step)
+	for(int brightness=maxBrightness; brightness>=minBrightness; brightness-=step)
 	{
 		for(int i=0;i<SIZE;i++)
 		{
@@ -30,4 +32,3 @@ void test_PWM()
 		sleep_ms(WROOM);	
 	}
 }
-*/

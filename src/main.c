@@ -150,7 +150,7 @@ void app_main()
     // );
 
 	// TODO: Detector works, reformat files
-	person_LED(); // TODO: PRZETESTUJ TO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	thread_detect_person();
 
 	while(true)
 	{
@@ -159,7 +159,7 @@ void app_main()
 		//test_PWM();
 		
 
-		sleep_ms(10);
+		sleep_ms(100);
 	}
 
     // gpio_dump_io_configuration(stdout, (1ULL << 34) | (1ULL << 18) | (1ULL << 26));

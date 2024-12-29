@@ -37,6 +37,15 @@ void test_show_LED(int input_x1, int input_y1) //, int input_x2, int input_y2
 	}
 }
 */
+
+void show_LED3(int input_x1, int input_y1) //, int input_x2, int input_y2
+{
+	for(int i=0;i<13;i++)
+	{
+		set_brightness(i, 1);
+	}
+}
+
 uint8_t state;
 enum
 {
@@ -95,35 +104,70 @@ void show_LED2(int input_x1, int input_y1) //, int input_x2, int input_y2
 
 void show_LED(int input_x1, int input_y1) //, int input_x2, int input_y2
 {
-	if(input_x1 > -100 && input_x1 < 100 && input_y1 > 0) 
-	{
-		uint8_t tab[] = {5, 50, 90, 100, 90, 50, 5}; // max number of stairs ON [ x x - - - - - - - - - - - ],   [ - - x x x x x x x - - - - ]
-		int startLength = 130; // cm
-		int endLength = 520; // cm
-		int minLength = 0;
-		int maxLength = 600;
-		int32_t person_y1 = (input_y1 - startLength) / 30; // wartosc jest ujemna
-		int width = (endLength - startLength) / 30; // 13
-		int tabLength = sizeof(tab) / sizeof(tab[0]);
+	// Person is not detected, show default scene
+	uint8_t offMode = 1;
+	// Person is detected!
+	uint8_t onMode[] = {1, 10, 40, 50, 40, 10, 1}; // max number of stairs ON [ x x - - - - - - - - - - - ],   [ - - x x x x x x x - - - - ]
+	int onModeLen = sizeof(onMode) / sizeof(onMode[0]);
+	
+	//int minLength = 0; FYI
+	//int maxLength = 600; FYI
+	int gap = 32; // space between steps, cm
+	int startLength = 120; // cm
+	int endLength = startLength + 13 * gap; // 526 cm
 
+	int32_t person_y1 = (input_y1 - startLength) / gap; // wartosc jest ujemna
+
+	if(input_y1 > startLength && input_y1 < endLength) 
+	{
+		/*int pos_y = (int)person_y1;
+		for(int j=pos_y - (onModeLen / 2+1); j>=0 && j < pos_y; j++)
+		{
+			set_brightness(j, 0);
+		}
+		for(int j = pos_y - onModeLen / 2, tabCount = 0; tabCount<onModeLen; j++, tabCount++)
+		{
+			if(tabCount <= onModeLen/2)
+			{
+				if(j >= 0) set_brightness(j, onMode[tabCount]);
+			}
+			else 
+			{
+				if(j < 13) set_brightness(j, onMode[tabCount]);
+			}
+		}
+		for(int j=pos_y+5; j<13; j++)
+		{
+			set_brightness(j, 0);
+		}*/
 		int k = (int)person_y1;
-		for(int j=k-5; j>=0 && j < k; j++)
+		for(int j=k-4; j>=0 && j < k; j++)
 		{
 			set_brightness(j, 0);
 		}
-		if(k-4 >= 0) 	set_brightness(k-4, 5);
-		if(k-3 >= 0) 	set_brightness(k-3, 10);
-		if(k-2 >= 0) 	set_brightness(k-2, 50);
-		if(k-1 >= 0) 	set_brightness(k-1, 90);
-		set_brightness(k, 100);
-		if(k+1 < 13) 	set_brightness(k+1, 90);
-		if(k+2 < 13) 	set_brightness(k+2, 50);
-		if(k+3 < 13) 	set_brightness(k+3, 10);
-		if(k+4 < 13) 	set_brightness(k+4, 5);
-		for(int j=k+5; j<13; j++)
+
+		if(k-3 >= 0) 	set_brightness(k-3, onMode[0]);
+		if(k-2 >= 0) 	set_brightness(k-2, onMode[1]);
+		if(k-1 >= 0) 	set_brightness(k-1, onMode[2]);
+		set_brightness(k, onMode[3]);
+		if(k+1 < 13) 	set_brightness(k+1, onMode[4]);
+		if(k+2 < 13) 	set_brightness(k+2, onMode[5]);
+		if(k+3 < 13) 	set_brightness(k+3, onMode[6]);
+
+		for(int j=k+4; j<13; j++)
 		{
 			set_brightness(j, 0);
 		}
+
+	}
+	else
+	{
+		set_brightness(0, offMode);
+		for(int j=1; j<12; j++)
+		{
+			set_brightness(j, 0);
+		}
+		set_brightness(12, offMode);
 	}
 }
 
@@ -135,32 +179,38 @@ static void display_LED()
 	esp_log_level_set(TAG, ESP_LOG_VERBOSE);
 	//esp_log_level_set(TAG, ESP_LOG_VERBOSE);
 	int32_t x, y;
+	//int32_t x2, y2;
+	//int32_t x3, y3;
 	int32_t px=0, py=0;
 	int32_t rx,ry;
+	int i=0;
 	while(true) 
 	{
 		sleep_ms(10);
 		//print_matrix((int)LD2450.target1X, (int)LD2450.target1Y);
 		get_person(ld2450_bottom, 0, &x, &y);
+		//get_person(ld2450_bottom, 1, &x2, &y2);
+		//get_person(ld2450_bottom, 1, &x3, &y3);
 		//get_person(ld2450_top, 0, &x2, &y2);
 		rx = abs(x-px);
 		ry = abs(y-py);
-		if (rx > 15)
+		if (rx > 10)
 		{
 			px = x;
 		}
-		if (ry > 15)
+		if (ry > 10)
 		{
 			py = y;
 		}
-		show_LED((int)px, (int)py);
-		//ESP_LOGV(TAG, "1X=%d 1Y=%d", (int)x, (int)y );
+		show_LED((int)x, (int)y); // TODO: set to px and py back
+		if(i % 10 == 0) ESP_LOGV(TAG, "1X=%d 1Y=%d", (int)x, (int)y );
+		i++;
 	}
 }
 
 
 
-void person_LED() 
+void thread_detect_person() 
 {
 	xTaskCreate(
 		display_LED,		
