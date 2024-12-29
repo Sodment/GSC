@@ -1,1 +1,1 @@
-void person_LED();
+void thread_detect_person();
