@@ -42,7 +42,7 @@ void show_LED3(int input_x1, int input_y1) //, int input_x2, int input_y2
 {
 	for(int i=0;i<13;i++)
 	{
-		set_brightness(i, 1);
+		set_brightness(i, 5);
 	}
 }
 
@@ -60,12 +60,12 @@ void show_LED2(int input_x1, int input_y1) //, int input_x2, int input_y2
 	switch (state)
 	{
 		case STATE_WAIT_FOR_EVENT:
-			if ((input_y1<=130) && ((input_y1>=50)))
+			if ((input_y1<=130) && (input_y1>=50))
 			{
 				state = STATE_WAIT_FOR_ANIMATE_FORWARD;
 			}
 			else
-			if (input_y1>=400)
+			if (input_y1>=500 && input_y1 <=540)
 			{
 				state = STATE_WAIT_FOR_ANIMATE_BACKWARD;
 			}
@@ -74,28 +74,28 @@ void show_LED2(int input_x1, int input_y1) //, int input_x2, int input_y2
 		case STATE_WAIT_FOR_ANIMATE_FORWARD:
 			for (int i=0;i<STAIRS_COUNT;i++)
 			{
-				set_brightness(i, 100);
-				sleep_ms(200);
+				set_brightness(i, 20);
+				sleep_ms(300);
 			}
 			sleep_ms(3000);
 			for (int i=0;i<STAIRS_COUNT;i++)
 			{
 				set_brightness(i, 0);
-				sleep_ms(200);
+				sleep_ms(300);
 			}
 			state = STATE_WAIT_FOR_EVENT;
 			break;
 		case STATE_WAIT_FOR_ANIMATE_BACKWARD:
 			for (int i=STAIRS_COUNT-1;i>=0;i--)
 			{
-				set_brightness(i, 100);
-				sleep_ms(200);
+				set_brightness(i, 20);
+				sleep_ms(300);
 			}
 			sleep_ms(3000);
 			for (int i=STAIRS_COUNT-1;i>=0;i--)
 			{
 				set_brightness(i, 0);
-				sleep_ms(200);
+				sleep_ms(300);
 			}
 			state = STATE_WAIT_FOR_EVENT;
 			break;
@@ -107,18 +107,18 @@ void show_LED(int input_x1, int input_y1) //, int input_x2, int input_y2
 	// Person is not detected, show default scene
 	uint8_t offMode = 1;
 	// Person is detected!
-	uint8_t onMode[] = {1, 10, 40, 50, 40, 10, 1}; // max number of stairs ON [ x x - - - - - - - - - - - ],   [ - - x x x x x x x - - - - ]
+	uint8_t onMode[] = {1, 10, 30, 30, 30, 10, 1}; // max number of stairs ON [ x x - - - - - - - - - - - ],   [ - - x x x x x x x - - - - ]
 	int onModeLen = sizeof(onMode) / sizeof(onMode[0]);
 	
 	//int minLength = 0; FYI
 	//int maxLength = 600; FYI
 	int gap = 32; // space between steps, cm
-	int startLength = 120; // cm
+	int startLength = 90; // cm
 	int endLength = startLength + 13 * gap; // 526 cm
 
 	int32_t person_y1 = (input_y1 - startLength) / gap; // wartosc jest ujemna
 
-	if(input_y1 > startLength && input_y1 < endLength) 
+	if(input_y1 > startLength && input_y1 < endLength && input_x1 > -200) 
 	{
 		/*int pos_y = (int)person_y1;
 		for(int j=pos_y - (onModeLen / 2+1); j>=0 && j < pos_y; j++)
@@ -202,8 +202,8 @@ static void display_LED()
 		{
 			py = y;
 		}
-		show_LED((int)x, (int)y); // TODO: set to px and py back
-		if(i % 10 == 0) ESP_LOGV(TAG, "1X=%d 1Y=%d", (int)x, (int)y );
+		show_LED2((int)px, (int)py); // TODO: set to px and py back
+		if(i % 10 == 0) ESP_LOGV(TAG, "1X=%d 1Y=%d", (int)px, (int)py );
 		i++;
 	}
 }
