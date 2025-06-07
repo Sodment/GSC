@@ -17,6 +17,7 @@
 		"stdint.h": "c",
 		"random": "c",
 		"esp_clk.h": "c",
-		"esp_system.h": "c"
+		"esp_system.h": "c",
+		"hlk-ld2450.h": "c"
 	}
 }
