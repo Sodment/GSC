@@ -19,7 +19,6 @@ extern const char *ANIMATION_DEBUG_TAG;
 extern const uint32_t MEM_BUFFER_SIZE;
 
 extern const int64_t ANIMATION_DURATION_MS;
-extern const int64_t WAIT_DURATION_BEFORE_OFF_S;
 extern const int64_t DURATION_PER_STEP;
 
 enum BOX
@@ -35,6 +34,7 @@ enum STATE
     S_OFF,
     S_ANIMATE,
     S_HOLD,
+    S_REVERSE_ANIMATE,
     S_MAX
 };
 
@@ -49,6 +49,7 @@ typedef struct ANIM_DEBUG_STATE
 {
     uint8_t state;
     uint8_t presence;
+    uint8_t direction;
 } AnimDebugState;
 
 typedef struct range
@@ -62,6 +63,12 @@ typedef struct BoundingBox2D
     Range X;
     Range Y;
 } BoundingBox2D;
+
+struct Kalman1D
+{
+    float estimate;
+    float error_cov;
+};
 
 extern const BoundingBox2D boundingBox[B_MAX];
 

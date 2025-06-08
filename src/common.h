@@ -15,4 +15,4 @@ void set_brightness(uint8_t index, uint8_t percent);
 
 #define STAIRS_COUNT 13
 #define MAX_BRIGHTNESS 50 // Max LED brightness in percentage points
-#define MAX_TRACKED_PEOPLE 3
+#define MAX_TRACKED_PEOPLE 1
