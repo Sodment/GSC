@@ -7,9 +7,9 @@ const int64_t ANIMATION_DURATION_MS = 3 * 1000;
 const int64_t DURATION_PER_STEP = ANIMATION_DURATION_MS / STAIRS_COUNT;
 
 const BoundingBox2D boundingBox[B_MAX] = {
-    {{-60, 40}, {30, 130}},   // B_BOT
-    {{-110, 40}, {130, 450}}, // B_MID
-    {{-110, 0}, {450, 590}}   // B_TOP
+    {{-100, 50}, {10, 170}}, // B_BOT
+    {{-60, 60}, {130, 530}}, // B_MID
+    {{-110, 10}, {490, 580}} // B_TOP
 };
 
 bool in_range(Range r, int32_t a)
