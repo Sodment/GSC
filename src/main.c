@@ -46,12 +46,6 @@ const int LEDS[] = {LED_0, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7, LED_
 
 static const char *TAG = "main";
 
-void show_frequency()
-{
-    uint32_t cpu_freq = esp_clk_cpu_freq(); // Funkcja do uzyskania częstotliwości CPU
-    printf("Current CPU frequency: %lu MHz\n", cpu_freq / (uint32_t)1000000);
-}
-
 ld2450_t *ld2450_bottom;
 ld2450_t *ld2450_top;
 
