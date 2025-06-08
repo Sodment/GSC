@@ -1,1 +1,0 @@
-void thread_detect_person();
