@@ -14,5 +14,6 @@ void sleep_ms(uint32_t ms);
 void set_brightness(uint8_t index, uint8_t percent);
 
 #define STAIRS_COUNT 13
-#define MAX_BRIGHTNESS 50 // Max LED brightness in percentage points
+#define MAX_BRIGHTNESS 10  // Max LED brightness in percentage points
+#define S_OFF_BRIGHTNESS 1 // First and last step brightness when noone is on stairs
 #define MAX_TRACKED_PEOPLE 1

@@ -68,6 +68,8 @@ struct Kalman1D
 {
     float estimate;
     float error_cov;
+    float previous_estimate; // Store previous estimate for smoothing
+    bool initialized;        // Track if filter has been initialized
 };
 
 extern const BoundingBox2D boundingBox[B_MAX];
