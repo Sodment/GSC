@@ -6,6 +6,14 @@ const uint32_t MEM_BUFFER_SIZE = 50; // Size of buffer that "remembers" last det
 const int64_t ANIMATION_DURATION_MS = 3 * 1000;
 const int64_t DURATION_PER_STEP = ANIMATION_DURATION_MS / STAIRS_COUNT;
 
+// ==== KALMAN FILTER CONFIGURATION ====
+// Adjust these values to tune the Kalman filter performance
+const float KALMAN_PROCESS_NOISE = 1.0f;        // Lower = smoother but slower response
+const float KALMAN_MEASUREMENT_NOISE = 40.0f;   // Lower = more trust in measurements
+const float KALMAN_INITIAL_COVARIANCE = 100.0f; // Initial uncertainty
+const float KALMAN_OUTLIER_THRESHOLD = 100.0f;  // Threshold for outlier detection
+const float KALMAN_SMOOTHING_FACTOR = 0.9f;     // Smoothing factor (0.0-1.0, higher = more smoothing)
+
 const BoundingBox2D boundingBox[B_MAX] = {
     {{-100, 50}, {10, 170}}, // B_BOT
     {{-60, 60}, {130, 530}}, // B_MID
@@ -101,6 +109,7 @@ AnimDebugState led_animation(int32_t x, int32_t y)
             int timeInStep = clamp(animation, 0, DURATION_PER_STEP);
             animation -= timeInStep;
             int brightness;
+            int extra_brightness = (i == 0 || i == STAIRS_COUNT - 1) ? 1 : 0;
             if (state == S_ANIMATE)
             {
                 brightness = (timeInStep * MAX_BRIGHTNESS) / DURATION_PER_STEP;
@@ -111,9 +120,9 @@ AnimDebugState led_animation(int32_t x, int32_t y)
             }
             else
             {
-                brightness = 0;
+                brightness = extra_brightness;
             }
-            set_brightness(i, brightness);
+            set_brightness(i, brightness + extra_brightness);
         }
 
         if (animation_time >= ANIMATION_DURATION_MS)
@@ -162,13 +171,43 @@ AnimDebugState led_animation(int32_t x, int32_t y)
 
 static void kalman_update(struct Kalman1D *kf, float measurement, float process_noise, float measurement_noise)
 {
+    // Initialize on first valid measurement
+    if (!kf->initialized && measurement != 0.0f)
+    {
+        kf->estimate = measurement;
+        kf->previous_estimate = measurement;
+        kf->error_cov = KALMAN_INITIAL_COVARIANCE;
+        kf->initialized = true;
+        return;
+    }
+
+    // Skip update if not initialized and measurement is zero
+    if (!kf->initialized)
+        return;
+
+    // Store previous estimate for smoothing
+    kf->previous_estimate = kf->estimate;
+
+    // Simple outlier rejection - if measurement is too far from estimate, reduce its weight
+    float innovation = measurement - kf->estimate;
+    float adaptive_measurement_noise = measurement_noise;
+
+    // Increase measurement noise for large innovations (outlier rejection)
+    if ((innovation > KALMAN_OUTLIER_THRESHOLD) || (innovation < -KALMAN_OUTLIER_THRESHOLD))
+    {
+        adaptive_measurement_noise *= 3.0f;
+    }
+
     // Prediction update
     kf->error_cov += process_noise;
 
     // Measurement update
-    float K = kf->error_cov / (kf->error_cov + measurement_noise); // Kalman gain
-    kf->estimate = kf->estimate + K * (measurement - kf->estimate);
+    float K = kf->error_cov / (kf->error_cov + adaptive_measurement_noise);
+    kf->estimate = kf->estimate + K * innovation;
     kf->error_cov = (1 - K) * kf->error_cov;
+
+    // Apply light smoothing to reduce jitter
+    kf->estimate = KALMAN_SMOOTHING_FACTOR * kf->estimate + (1.0f - KALMAN_SMOOTHING_FACTOR) * kf->previous_estimate;
 }
 
 static void run_stairs_logic()
@@ -202,10 +241,18 @@ static void run_stairs_logic()
     {
         memset(people[person].positions_memory.x, 0, MEM_BUFFER_SIZE * sizeof(int32_t));
         memset(people[person].positions_memory.y, 0, MEM_BUFFER_SIZE * sizeof(int32_t));
+
+        // Initialize Kalman filter for X coordinate
         people[person].kf_x.estimate = 0.0f;
-        people[person].kf_x.error_cov = 1000.0f; // Large initial uncertainty
+        people[person].kf_x.error_cov = KALMAN_INITIAL_COVARIANCE;
+        people[person].kf_x.previous_estimate = 0.0f;
+        people[person].kf_x.initialized = false;
+
+        // Initialize Kalman filter for Y coordinate
         people[person].kf_y.estimate = 0.0f;
-        people[person].kf_y.error_cov = 1000.0f;
+        people[person].kf_y.error_cov = KALMAN_INITIAL_COVARIANCE;
+        people[person].kf_y.previous_estimate = 0.0f;
+        people[person].kf_y.initialized = false;
     }
 
     uint32_t lastRecievedMillis = 0;
@@ -246,8 +293,8 @@ static void run_stairs_logic()
             // Only update if we have a valid measurement
             if (x_meas != 0 || y_meas != 0)
             {
-                kalman_update(&people[person].kf_x, (float)x_meas, 3.0f, 40.0f);
-                kalman_update(&people[person].kf_y, (float)y_meas, 3.0f, 40.0f);
+                kalman_update(&people[person].kf_x, (float)x_meas, KALMAN_PROCESS_NOISE, KALMAN_MEASUREMENT_NOISE);
+                kalman_update(&people[person].kf_y, (float)y_meas, KALMAN_PROCESS_NOISE, KALMAN_MEASUREMENT_NOISE);
                 people[person].mean.x = (int32_t)people[person].kf_x.estimate;
                 people[person].mean.y = (int32_t)people[person].kf_y.estimate;
             }
